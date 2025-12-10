@@ -2,3 +2,5 @@ google-genai
 pydantic
 python-dotenv
 langgraph
+fastapi
+pytest
