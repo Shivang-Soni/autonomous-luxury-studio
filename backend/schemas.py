@@ -15,3 +15,15 @@ class ProductSpecs(BaseModel):
     main_stone: MainStone
     setting_style: str
     unique_imperfections: str
+
+
+class LightingMap(BaseModel):
+    source_direction: str
+    temperature: str
+
+
+class ScenePlan(BaseModel):
+    prompt: str
+    negative_prompt: str
+    lighting_map: LightingMap
+    inpaint_coordinates: list
