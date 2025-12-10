@@ -1,5 +1,4 @@
-from typing import Any, Dict, Optional
-
+from typing import Any, Dict, Optional, List
 from pydantic import BaseModel
 
 
@@ -26,4 +25,12 @@ class ScenePlan(BaseModel):
     prompt: str
     negative_prompt: str
     lighting_map: LightingMap
-    inpaint_coordinates: list
+    inpaint_coordinates: List[Any]
+
+
+class GraphState(BaseModel):
+    product: ProductSpecs
+    analysis: Optional[Dict[str, Any]] = None
+    generation: Optional[Dict[str, Any]] = None
+    judgement: Optional[Dict[str, Any]] = None
+    retries: int = 0
