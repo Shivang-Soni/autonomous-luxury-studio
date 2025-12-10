@@ -15,3 +15,4 @@ class Configuration:
         self.OUTPUT_DIR = os.getenv("OUTPUT_DIR", "")
         self.MIN_ACCEPTED_SCORE = int(os.getenv("MIN_ACCEPTED_SCORE", ""))
         self.MAX_RETRIES = int(os.getenv("MAX_RETIRES", ""))
+        self.INPUT_DIR = os.getenv("INPUT_DIR", "")
