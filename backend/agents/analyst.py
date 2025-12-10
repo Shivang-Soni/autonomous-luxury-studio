@@ -44,7 +44,7 @@ class AnalystAgent:
             "- No additional text outside the JSON.\n"
             "- If uncertain, make the closest visually justified estimate."
         )
-    
+
     def analyse(self, image_path: str) -> ProductSpecs:
         """
         Performs a full vision analysis of the product

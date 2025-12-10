@@ -15,4 +15,3 @@ class ProductSpecs(BaseModel):
     main_stone: MainStone
     setting_style: str
     unique_imperfections: str
-
