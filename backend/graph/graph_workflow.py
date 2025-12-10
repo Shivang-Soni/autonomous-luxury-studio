@@ -1,6 +1,9 @@
-from typing import Callable
+from typing import Dict, Any
 
-from backend.schemas import GraphState, ScenePlan
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+
+from backend.schemas import GraphState
 from backend.agents.analyst import AnalystAgent
 from backend.agents.art_director import DirectorAgent
 from backend.agents.judge import JudgeAgent
@@ -35,45 +38,9 @@ class GraphWorkflow:
         self.director_agent = director_agent
         self.producer_agent = producer_agent
         self.judge_agent = judge_agent
+        self.checkpointer = MemorySaver()
 
         self.threshold = config.MIN_ACCEPTED_SCORE
         self.max_retries = config.MAX_RETRIES
     
-    def run(
-            self,
-            product_specs,
-            image_path
-    ) -> GraphState:
-        """
-        Main entrypoint.
-        Accepts the ProductSpecs and returns the final GraphState.
-        """
-        state = GraphState(product=product_specs)
-        # Node A: AnalystAgent
-        analysis = self.analyst_agent.analyse(product_specs)
-        state.analysis = analysis
-        # Node B: DirectorAgent
-        scene_plan: ScenePlan = self.director_agent.create_scene(analysis)
-        state.scene_plan = scene_plan
-        # Producer + Agent Loop (C<=>D)
-        retries = 0
-        last_score = 0
-        feedback = None
-
-        while retries <= self.max_retries:
-            # Node C: ProducerAgent
-            candidate_path = self.producer_agent.generate_final_candidate(
-                product_png_path=config.INPUT_DIR,
-                scene_plan=state.scene_plan,
-                feedback=feedback
-                )
-            
-            state.generation.append(candidate_path)
-
-            # Node D: JudgeAgent
-            score, judge_feedback = self.judge_agent.evaluate(
-                original_image_path=image_path,
-                candidate_image_path=candidate_path
-            )
-
-            state_scores.append(score)
+   
