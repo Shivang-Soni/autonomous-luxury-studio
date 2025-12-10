@@ -3,15 +3,19 @@ from typing import Union, List
 from google import genai
 from google.genai import types
 
+from config import Configuration
+
+config = Configuration()
+
 
 class GeminiClient:
     """
-    Gemini LLM Wrapper client, which: 
+    Gemini LLM Wrapper client, which:
     - supports text only prompts
     - supports text + image prompts
     """
     def __init__(self, model: str = "gemini-3-pro-preview"):
-        self.client = genai.Client()
+        self.client = genai.Client(api_key=config.GEMINI_API_KEY)
         self.model = model
 
     def invoke_text(
