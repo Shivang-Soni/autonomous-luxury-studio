@@ -13,4 +13,5 @@ class Configuration:
         self.PRODUCER_MODEL = os.getenv("PRODUCER_MODEL", "")
         self.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
         self.OUTPUT_DIR = os.getenv("OUTPUT_DIR", "")
-        self.MIN_ACCEPTED_SCORE = os.getenv("MIN_ACCEPTED_SCORE", "")
+        self.MIN_ACCEPTED_SCORE = int(os.getenv("MIN_ACCEPTED_SCORE", ""))
+        self.MAX_RETRIES = int(os.getenv("MAX_RETIRES", ""))
