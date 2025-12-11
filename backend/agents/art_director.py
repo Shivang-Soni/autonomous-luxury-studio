@@ -49,7 +49,8 @@ class DirectorAgent:
         """
 
         user_message = (
-            "Convert the following product specs STRICTLY into a scene plan JSON:\n\n"
+            "Convert the following product specs"
+            " STRICTLY into a scene plan JSON:\n\n"
             f"{specs.model_dump_json()}"
         )
 
