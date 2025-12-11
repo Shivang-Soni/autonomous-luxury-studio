@@ -9,29 +9,23 @@ config = Configuration()
 
 class DirectorAgent:
     """
-    The Art Dirctor Node
+    The Art Director Node
 
-    Responsiblities:
-    - Produces
-        - generation prompts
-        - negative prompts
-        - lighting schema
-        - precise inpainting coordiates
-    - Ensures no additional jewellery is introduced
-    - Converts ground truth ProductSpecs into
-      a cinematic, brand aligned visual narrative.
+    Responsibilities:
+    - Produces generation prompts, negative prompts, lighting schema,
+      precise inpainting coordinates
+    - Converts ProductSpecs into a cinematic brand-aligned scene plan
     """
 
     def __init__(self, model: str = config.ART_DIRECTOR_MODEL):
         self.model = GeminiClient(model=model)
 
         self.system_prompt = (
-            "You are the Senior Art Director for 64 Facets,"
-            " a luxury jewelry studio. "
-            "You transform structured gemstone product specifications into a "
-            "high-end cinematic visual narrative.\n\n"
-            "You MUST output a STRICT JSON object"
-            " following exactly this schema:\n"
+            "You are the Senior Art Director for 64 Facets, "
+            "a luxury jewelry studio. "
+            "You transform structured gemstone product specifications "
+            "into a high-end cinematic visual narrative.\n\n"
+            "You MUST output a STRICT JSON object exactly following:\n"
             "{\n"
             '  "prompt": "string",\n'
             '  "negative_prompt": "string",\n'
@@ -42,11 +36,11 @@ class DirectorAgent:
             '  "inpaint_coordinates": [x1, y1, x2, y2]\n'
             "}\n\n"
             "BRAND RULES:\n"
-            "- Show ONLY the provided jewelry. Never add extra pieces.\n"
-            "- Maintain luxury-class, editorial photographic style.\n"
-            "- Avoid distortion, extra fingers, reflections of extra jewelry.\n"
-            "- Coordinates must correspond to a realistic anatomical placement.\n"
-            "- JSON must be valid, minimal, and contain NO extra commentary.\n"
+            "- Show ONLY the provided jewelry.\n"
+            "- Maintain luxury editorial photography style.\n"
+            "- Avoid distortions or reflections of extra jewelry.\n"
+            "- Coordinates must be physically realistic.\n"
+            "- JSON must be valid, minimal, and have NO commentary.\n"
         )
 
     def create_scene(self, specs: ProductSpecs) -> ScenePlan:
@@ -55,8 +49,7 @@ class DirectorAgent:
         """
 
         user_message = (
-            "Convert the following product specs"
-            " STRICTLY into a scene plan JSON:\n\n"
+            "Convert the following product specs STRICTLY into a scene plan JSON:\n\n"
             f"{specs.model_dump_json()}"
         )
 
@@ -65,14 +58,15 @@ class DirectorAgent:
             user_message
         ]
 
+        # Falls dein GeminiClient nur Strings akzeptiert → joinen
         raw_output = self.model.invoke_text(contents)
 
         try:
             scene_plan = ScenePlan.model_validate_json(raw_output)
         except Exception as e:
             raise ValueError(
-                f"DirectorAgent: JSON Parsing failed."
-                f"Raw model output: \n{raw_output}\n"
+                f"DirectorAgent: JSON Parsing failed.\n"
+                f"Raw model output:\n{raw_output}\n"
                 f"Validation error: {e}"
             )
 
