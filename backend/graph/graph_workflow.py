@@ -3,12 +3,12 @@ from typing import Dict, Any
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
-from backend.schemas import GraphState
-from backend.agents.analyst import AnalystAgent
-from backend.agents.art_director import DirectorAgent
-from backend.agents.judge import JudgeAgent
-from backend.agents.producer import ProducerAgent
-from backend.config import Configuration
+from schemas import GraphState
+from agents.analyst import AnalystAgent
+from agents.art_director import DirectorAgent
+from agents.judge import JudgeAgent
+from agents.producer import ProducerAgent
+from config import Configuration
 
 config = Configuration()
 

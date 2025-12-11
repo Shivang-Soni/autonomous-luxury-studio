@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routes import router as api_router
-from backend.config import Configuration
+from routes import router as api_router
+from config import Configuration
 
 config = Configuration()
 

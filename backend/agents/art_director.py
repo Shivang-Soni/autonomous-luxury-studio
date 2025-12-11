@@ -1,6 +1,6 @@
 from typing import Dict, Any
 
-from backend.llm.gemini_pipeline import GeminiClient
+from llm.gemini_pipeline import GeminiClient
 from schemas import ProductSpecs, ScenePlan
 from config import Configuration
 

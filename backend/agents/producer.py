@@ -3,9 +3,9 @@ from pathlib import Path
 import uuid
 
 from google import genai
-from backend.schemas import ScenePlan
-from backend.llm.gemini_pipeline import GeminiClient
-from backend.config import Configuration
+from schemas import ScenePlan
+from llm.gemini_pipeline import GeminiClient
+from config import Configuration
 
 config = Configuration()
 

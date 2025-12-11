@@ -1,7 +1,7 @@
 from typing import Tuple, Dict
 
-from backend.llm.gemini_pipeline import GeminiClient
-from backend.config import Configuration
+from llm.gemini_pipeline import GeminiClient
+from config import Configuration
 
 config = Configuration()
 
