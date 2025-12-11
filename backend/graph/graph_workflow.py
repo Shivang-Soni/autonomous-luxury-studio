@@ -14,19 +14,6 @@ config = Configuration()
 
 
 class GraphWorkflow:
-    """
-    Core Workflow Orchestrator
-    Executes our Autonomous Luxury Studio pipeline:
-    - AnalystAgent: Analyses the product
-    - DirectorAgent: Formulates the prompt suitable to the product details
-    - ProducerAgent: Generates outputs based on the instructions
-      received from the previous agents, as well as based on feedback
-      from the JudgeAgent
-    - JudgeAgent: evaluates and provides feedback
-    - Retries (ReAct Agentic pipeline),
-      until the score is deemed to be satisfactory
-    """
-
     def __init__(
         self,
         analyst_agent: AnalystAgent,
@@ -111,7 +98,8 @@ class GraphWorkflow:
             }
         )
 
-        return workflow.compile(checkpointer=self.checkpointer)
+        self.workflow = workflow.compile(checkpointer=self.checkpointer)
+        return self
 
-    def invoke(self, state: GraphState):
-        
+    def invoke(self, state: GraphState) -> GraphState:
+        return self.workflow.run(state)
