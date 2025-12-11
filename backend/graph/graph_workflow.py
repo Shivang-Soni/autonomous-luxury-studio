@@ -112,3 +112,6 @@ class GraphWorkflow:
         )
 
         return workflow.compile(checkpointer=self.checkpointer)
+
+    def invoke(self, state: GraphState):
+        
