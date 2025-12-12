@@ -6,15 +6,12 @@ from config import Configuration
 
 config = Configuration()
 
-
 app = FastAPI(
     title="Autonomous Luxury Studio API",
     version="1.0.0"
 )
 
-config = Configuration()
-
-# CORS
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,8 +20,8 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Register routes
-app.include(api_router)
+# Register API routes
+app.include_router(api_router)
 
 
 @app.get("/health")

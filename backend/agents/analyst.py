@@ -1,9 +1,7 @@
-from typing import Dict, Any
+from typing import Any
 
-from google import genai
-
-from schemas import ProductSpecs
 from llm.gemini_pipeline import GeminiClient
+from schemas import ProductSpecs
 from config import Configuration
 
 config = Configuration()
@@ -25,8 +23,7 @@ class AnalystAgent:
 
         self.system_prompt = (
             "You are a Gemologist AI specializing in jewelry. "
-            "Analyze the provided product image "
-            "and produce a STRICT JSON object "
+            "Analyze the provided product image and produce a STRICT JSON object "
             "with the following fields:\n\n"
             "{\n"
             '  "metal_type": "string",\n'
@@ -50,24 +47,20 @@ class AnalystAgent:
         Performs a full vision analysis of the product
         and returns ProductSpecs.
         """
+        # read image bytes
+        with open(image_path, "rb") as _f:
+            image_bytes = _f.read()
 
-        img_part = self.model.load_image(image_path)
+        # Compose the complete contents
+        response_text = self.model.invoke_with_image(self.system_prompt, image_bytes)
 
-        # Compose the complete contents list
-        contents = [
-            img_part,
-            self.system_prompt
-        ]
-
-        response_text = self.model.invoke_with_image(contents)
-
-        # Parse as JSON
+        # Parse as JSON into Pydantic model
         try:
-            parsed_json = ProductSpecs.model_validate_json(response_text)
+            parsed = ProductSpecs.model_validate_json(response_text)
         except Exception:
             raise ValueError(
-                f"AnalystAgent: JSON parsing failed."
+                "AnalystAgent: JSON parsing failed. "
                 f"Raw output: {response_text}"
-                )
+            )
 
-        return parsed_json
+        return parsed

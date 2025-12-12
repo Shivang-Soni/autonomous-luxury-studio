@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Optional
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
@@ -14,69 +14,63 @@ config = Configuration()
 
 
 class GraphWorkflow:
+    """
+    Orchestrates the full 64 Facets pipeline as a directed graph:
+    Analyst -> Director -> Producer -> Judge (feedback loop)
+    """
+
     def __init__(
         self,
-        analyst_agent: AnalystAgent,
-        director_agent: DirectorAgent,
-        producer_agent: ProducerAgent,
-        judge_agent: JudgeAgent
+        analyst: AnalystAgent,
+        director: DirectorAgent,
+        producer: ProducerAgent,
+        judge: JudgeAgent,
     ):
-        self.analyst_agent = analyst_agent
-        self.director_agent = director_agent
-        self.producer_agent = producer_agent
-        self.judge_agent = judge_agent
-        self.checkpointer = MemorySaver()
+        self.analyst = analyst
+        self.director = director
+        self.producer = producer
+        self.judge = judge
 
+        self.checkpointer = MemorySaver()
         self.threshold = config.MIN_ACCEPTED_SCORE
         self.max_retries = config.MAX_RETRIES
 
     def _node_analyst(self, state: GraphState) -> GraphState:
-        analysis = self.analyst_agent.analyse(state.product)
-        state.analysis = analysis
+        state.analysis = self.analyst.analyse(state.product)
         return state
 
     def _node_director(self, state: GraphState) -> GraphState:
-        scene_plan = self.director_agent.create_scene(
-            specs=state.product,
-            analysis=state.analysis
-        )
-        state.scene_plan = scene_plan
+        state.scene_plan = self.director.create_scene(state.analysis)
         return state
 
     def _node_producer(self, state: GraphState) -> GraphState:
-        generation = self.producer_agent.generate_final_candidate(
-            product_png_path=state.analysis.get("product_png_path"),
+        state.generation = self.producer.generate_final_candidate(
+            product_png_path=state.analysis.product_png_path,
             scene_plan=state.scene_plan,
-            feedback=state.judgement.get("feedback") if state.judgement else None
+            feedback=state.judgement.feedback if state.judgement else None,
         )
-        state.generation = generation
         return state
 
     def _node_judge(self, state: GraphState) -> GraphState:
-        score, feedback = self.judge_agent.evaluate(
-            original_image_path=state.analysis.get("product_png_path"),
-            candidate_image_path=state.generation.get("generated_image_path")
+        score, feedback = self.judge.evaluate(
+            original_image_path=state.analysis.product_png_path,
+            candidate_image_path=state.generation.generated_image_path,
         )
-        state.judgement = {
-            "score": score,
-            "feedback": feedback
-        }
+        state.judgement = {"score": score, "feedback": feedback}
         return state
 
     def _should_retry(self, state: GraphState) -> str:
         score = state.judgement.get("score", 100)
-        if score > self.threshold:
+        if score >= self.threshold or state.retries >= self.max_retries:
             return "end"
-        if state.retries >= self.max_retries:
-            return "end"
+
         state.retries += 1
-        state.scene_plan = self.director_agent.correct_scene(
-            scene_plan=state.scene_plan,
-            feedback=state.judgement.get("feedback")
+        state.scene_plan = self.director.correct_scene(
+            scene_plan=state.scene_plan, feedback=state.judgement.get("feedback")
         )
         return "producer"
 
-    def build(self):
+    def build(self) -> "GraphWorkflow":
         workflow = StateGraph(GraphState)
         workflow.add_node("analyst", self._node_analyst)
         workflow.add_node("director", self._node_director)
@@ -92,10 +86,7 @@ class GraphWorkflow:
         workflow.add_conditional_edge(
             "judge",
             self._should_retry,
-            {
-                "producer": "producer",
-                "end": END
-            }
+            {"producer": "producer", "end": END},
         )
 
         self.workflow = workflow.compile(checkpointer=self.checkpointer)

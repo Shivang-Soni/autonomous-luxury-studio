@@ -1,4 +1,6 @@
-from typing import Dict, Any
+# backend/agents/art_director.py
+
+from typing import Any
 
 from llm.gemini_pipeline import GeminiClient
 from schemas import ProductSpecs, ScenePlan
@@ -47,28 +49,23 @@ class DirectorAgent:
         """
         Converts ProductSpecs to a ScenePlan
         """
-
         user_message = (
-            "Convert the following product specs"
-            " STRICTLY into a scene plan JSON:\n\n"
+            "Convert the following product specs STRICTLY into a scene plan JSON:\n\n"
             f"{specs.model_dump_json()}"
         )
 
-        contents = [
-            self.system_prompt,
-            user_message
-        ]
+        prompt = f"{self.system_prompt}\n\n{user_message}"
 
-        # Falls dein GeminiClient nur Strings akzeptiert → joinen
-        raw_output = self.model.invoke_text(contents)
+        # Invoke Gemini (text)
+        raw_output = self.model.invoke(prompt)
 
         try:
             scene_plan = ScenePlan.model_validate_json(raw_output)
-        except Exception as e:
+        except Exception as exc:
             raise ValueError(
-                f"DirectorAgent: JSON Parsing failed.\n"
+                "DirectorAgent: JSON Parsing failed.\n"
                 f"Raw model output:\n{raw_output}\n"
-                f"Validation error: {e}"
+                f"Validation error: {exc}"
             )
 
         return scene_plan

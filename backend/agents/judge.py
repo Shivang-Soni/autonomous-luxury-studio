@@ -1,6 +1,7 @@
-from typing import Tuple, Dict
+from typing import Any, Dict
 
 from llm.gemini_pipeline import GeminiClient
+from schemas import ScenePlan, ProductSpecs, JudgeEvaluation
 from config import Configuration
 
 config = Configuration()
@@ -8,75 +9,62 @@ config = Configuration()
 
 class JudgeAgent:
     """
-    JudgeAgent Node
+    The Judge Node
 
-    Responsiblities:
-    - Compare Original to the Generated Image
-    - Evaluate critical visual aspects: cut, petals, metal, anatomy, shape
-      and so on
-    - Return the score (0-100) and a structured feedback
-      for the Producer to analyse
+    Responsibilities:
+    - Evaluates whether the generated scene plan is:
+        • Accurate to the product specs
+        • Brand-aligned
+        • Physically realistic
+        • Cinematically coherent
+    - Returns strict JSON evaluation to ensure downstream consistency.
     """
 
     def __init__(self, model: str = config.JUDGE_MODEL):
         self.model = GeminiClient(model=model)
 
         self.system_prompt = (
-            "You are a meticulous Visual QA AI specialized in luxury jewelry photography. "
-            "Compare the Original product image and the Generated result.\n\n"
-            "Evaluate STRICTLY, following are some examples:\n"
-            "- Is the diamond cut identical?\n"
-            "- Are there exactly 5 flower petals?\n"
-            "- Does the metal look like real metal and not plastic?\n"
-            "- Are the model's fingers anatomically correct?\n"
-            "Return a STRICT JSON object:\n"
+            "You are the Senior Creative Judge for 64 Facets.\n"
+            "You evaluate the realism, accuracy, and brand validity of jewelry scene plans.\n\n"
+            "You MUST output a STRICT JSON object with the following structure:\n"
             "{\n"
-            '  "score": 0-100,\n'
-            '  "feedback": "string description of required corrections"\n'
-            "}\n"
-            "RULES:\n"
-            "- JSON only, no extra commentary.\n"
-            "- If uncertain, make the closest visually justified estimate."
+            '   "score": float,  // 0.0 - 10.0\n'
+            '   "is_approved": boolean,\n'
+            '   "issues": [ "string", ... ],\n'
+            '   "recommendations": [ "string", ... ]\n'
+            "}\n\n"
+            "EVALUATION RULES:\n"
+            "- Score must reflect luxury brand standards.\n"
+            "- Approve only if scene plan is feasible and editorial-grade.\n"
+            "- Be strict: unrealistic lighting, impossible geometry, or noisy prompts must be penalized.\n"
+            "- JSON must be VALID and contain ZERO commentary.\n"
         )
 
-    def evaluate(
-            self,
-            original_image_path: str,
-            candidate_image_path: str,
-        ) -> Tuple[int, Dict]:
+    def evaluate(self, specs: ProductSpecs, plan: ScenePlan) -> JudgeEvaluation:
         """
-        Compares the original and the candidate images STRICTLY.
-        Returns score in the range from 0 to 100,
-        as well as a feedback dictionary.
+        Evaluates a scene plan against product specs using the Gemini model.
         """
 
-        # Load images
-        original_part = self.model.load_image(original_image_path)
-        candidate_part = self.model.load_image(candidate_image_path)
+        user_message = (
+            "Evaluate the following object pair.\n\n"
+            "Product Specifications:\n"
+            f"{specs.model_dump_json()}\n\n"
+            "Scene Plan:\n"
+            f"{plan.model_dump_json()}\n\n"
+            "Return STRICT evaluation JSON."
+        )
 
-        # Orchestration of the individual components
-        contents = [
-            self.system_prompt,
-            original_part,
-            candidate_part
-            ]
-        
-        raw_output = self.model.invoke_with_image(contents)
+        prompt = f"{self.system_prompt}\n\n{user_message}"
 
-        # Parse output
+        raw_output = self.model.invoke(prompt)
+
         try:
-            parsed = eval(raw_output)
-            score = int(parsed.get("score", "100"))
-            feedback = parsed.get("feedback", "")
-            feedback_dict = {
-                "score": score,
-                "feedback": feedback
-            }
-        except Exception:
-            score = 100
-            feedback_dict = {
-                "score": score,
-                "feedback": "Unable to parse Q/A output."
-            }
-        
-        return score, feedback_dict
+            evaluation = JudgeEvaluation.model_validate_json(raw_output)
+        except Exception as exc:
+            raise ValueError(
+                "JudgeAgent: JSON decoding failed.\n"
+                f"Raw model output:\n{raw_output}\n"
+                f"Validation error: {exc}"
+            )
+
+        return evaluation

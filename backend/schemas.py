@@ -31,7 +31,7 @@ class ScenePlan(BaseModel):
 class GraphState(BaseModel):
     product: ProductSpecs
     analysis: Optional[Dict[str, Any]] = None
-    scene_plan: ScenePlan | None = None
+    scene_plan: Optional[ScenePlan] = None
     generation: Optional[Dict[str, Any]] = None
     judgement: Optional[Dict[str, Any]] = None
     retries: int = 0

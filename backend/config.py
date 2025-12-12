@@ -1,5 +1,4 @@
 import os
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,6 +12,6 @@ class Configuration:
         self.PRODUCER_MODEL = os.getenv("PRODUCER_MODEL", "")
         self.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
         self.OUTPUT_DIR = os.getenv("OUTPUT_DIR", "")
-        self.MIN_ACCEPTED_SCORE = int(os.getenv("MIN_ACCEPTED_SCORE", ""))
-        self.MAX_RETRIES = int(os.getenv("MAX_RETIRES", ""))
         self.INPUT_DIR = os.getenv("INPUT_DIR", "")
+        self.MIN_ACCEPTED_SCORE = int(os.getenv("MIN_ACCEPTED_SCORE", "90"))
+        self.MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))

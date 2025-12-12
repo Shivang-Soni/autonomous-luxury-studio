@@ -37,7 +37,7 @@ def test_director_creates_scene(director, product_specs, fake_scene_json):
     with patch.object(
         director.model, "invoke_text",
         return_value=fake_scene_json
-        ):
+    ):
         scene = director.create_scene(product_specs)
 
     assert isinstance(scene, ScenePlan)

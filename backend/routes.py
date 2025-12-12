@@ -27,12 +27,7 @@ director = DirectorAgent()
 producer = ProducerAgent()
 judge = JudgeAgent()
 
-workflow = GraphWorkflow(
-    analyst,
-    director,
-    producer,
-    judge
-).build()
+workflow = GraphWorkflow(analyst, director, producer, judge).build()
 
 
 def clear_directory(directory: Path):
@@ -40,7 +35,7 @@ def clear_directory(directory: Path):
         f.unlink(missing_ok=True)
 
 
-def run_single(image_path: Path):
+def run_single(image_path: Path) -> GraphState:
     specs = ProductSpecs(image_path=str(image_path))
     state = GraphState(product=specs)
     state = workflow.invoke(state)
@@ -59,7 +54,7 @@ def save_result(image_path: Path, state: GraphState):
     payload = {
         "image": str(image_path),
         "analysis": state.analysis,
-        "scene_plan": state.scene_plan,
+        "scene_plan": state.scene_plan.model_dump() if state.scene_plan else None,
         "generation_file": str(OUTPUT_DIR / f"{image_path.stem}_generated.png") if state.generation else None,
         "judgement": state.judgement,
         "retries": state.retries

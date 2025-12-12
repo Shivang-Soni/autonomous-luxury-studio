@@ -1,83 +1,35 @@
-from typing import Union, List
-
 from google import genai
 from google.genai import types
-
-from config import Configuration
-
-config = Configuration()
 
 
 class GeminiClient:
     """
-    Gemini LLM Wrapper client, which:
-    - supports text only prompts
-    - supports text + image prompts
+    Gemini LLM Wrapper client
     """
-    def __init__(self, model: str = "gemini-3-pro-preview"):
-        self.client = genai.Client(api_key=config.GEMINI_API_KEY)
+
+    def __init__(self, model: str = "gemini-2.0-pro-exp-02-05"):
+        # Client folgt der aktuellen Google-Dokumentation
+        self.client = genai.Client()
         self.model = model
 
-    def invoke_text(
-            self,
-            prompt,
-            max_tokens: int = 2048,
-            temperature: float = 0.2
-            ) -> str:
-        """
-        Generates from simple text prompt.
-        """
+    def invoke(self, prompt: str) -> str:
         response = self.client.models.generate_content(
             model=self.model,
-            contents=[prompt],
-            config=types.GenerateContentConfig(
-                max_output_tokens=max_tokens,
-                temperature=temperature
-                )
-            )
-
+            contents=prompt,
+        )
         return response.text
 
-    def invoke_with_image(
-            self,
-            contents: Union[str, List[Union[str, types.Part]]],
-            max_tokens: int = 2048,
-            temperature: float = 0.2
-            ) -> str:
+    def invoke_with_image(self, prompt: str, image_bytes: bytes) -> str:
         """
-        Unified text + image generation
+        Vision + Text pipeline, konform zur aktuellen Google-API.
         """
-
-        payload = []
-
-        for c in contents:
-            if isinstance(c, str):
-                payload.append(c)
-            elif isinstance(c, types.Part):
-                payload.append(c)
-            else:
-                raise ValueError(f"Unsupported content type: {type(c)}")
+        part = types.Part.from_bytes(
+            data=image_bytes,
+            mime_type="image/png",
+        )
 
         response = self.client.models.generate_content(
             model=self.model,
-            contents=payload,
-            config=types.GenerateContentConfig(
-                max_output_tokens=max_tokens,
-                temperature=temperature
-            )
+            contents=[prompt, part],
         )
-
         return response.text
-
-    @staticmethod
-    def load_image(path: str, mime_type: str = "image/png") -> types.Part:
-        """
-        Loads images as types.Part for Vision models
-        """
-        with open(path, "rb") as f:
-            data = f.read()
-
-        return types.Part.from_bytes(
-            data=data,
-            mime_type=mime_type
-        )
