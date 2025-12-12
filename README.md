@@ -84,9 +84,6 @@ backend/
 │   ├─ test_graph_workflow.py
 │   ├─ test_judge.py
 │   └─ test_producer.py
-│
-├─ /input   # Kundenbilder
-└─ /results # Generierte Bilder & JSON Reports
 
 ````
 
