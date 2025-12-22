@@ -22,9 +22,16 @@ OUTPUT_DIR = Path(config.OUTPUT_DIR)
 INPUT_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# Analyses the product Image it have diamonds,metal and all.
 analyst = AnalystAgent()
+
+# Director Agent decides the background of the generated image.
 director = DirectorAgent()
+
+# Placement of the Jwellery and generation of the Result.
 producer = ProducerAgent()
+
+#Analyses the image and give the Score and provide the Feedback Working as React Agent.
 judge = JudgeAgent()
 
 workflow = GraphWorkflow(analyst, director, producer, judge).build()
